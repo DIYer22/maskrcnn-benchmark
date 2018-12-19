@@ -32,7 +32,15 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.transforms = transforms
 
     def __getitem__(self, idx):
+        
         img, anno = super(COCODataset, self).__getitem__(idx)
+        while 0:
+            try:
+                img, anno = super(COCODataset, self).__getitem__(idx)
+                break
+            except:
+                #idx += 1
+                pass
 
         # filter crowd annotations
         # TODO might be better to add an extra field
