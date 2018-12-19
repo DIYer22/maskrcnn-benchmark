@@ -5,7 +5,12 @@ Basic training script for PyTorch
 
 # Set up custom environment before nearly anything else is imported
 # NOTE: this should be the first import (no not reorder)
+from boxx import *
+from boxx import addPathToSys, cf, pathjoin
+addPathToSys(__file__, '..')
+
 from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
+
 
 import argparse
 import os
@@ -26,7 +31,117 @@ from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
 
-def train(cfg, local_rank, distributed):
+#def train(cfg, local_rank, distributed):
+
+
+#    return model
+
+
+def test(cfg, model, distributed):
+    if distributed:
+        model = model.module
+    torch.cuda.empty_cache()  # TODO check if it helps
+    iou_types = ("bbox",)
+    if cfg.MODEL.MASK_ON:
+        iou_types = iou_types + ("segm",)
+    output_folders = [None] * len(cfg.DATASETS.TEST)
+    dataset_names = cfg.DATASETS.TEST
+    if cfg.OUTPUT_DIR:
+        for idx, dataset_name in enumerate(dataset_names):
+            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
+            mkdir(output_folder)
+            output_folders[idx] = output_folder
+    data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
+    for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
+        inference(
+            model,
+            data_loader_val,
+            dataset_name=dataset_name,
+            iou_types=iou_types,
+            box_only=cfg.MODEL.RPN_ONLY,
+            device=cfg.MODEL.DEVICE,
+            expected_results=cfg.TEST.EXPECTED_RESULTS,
+            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
+            output_folder=output_folder,
+        )
+        synchronize()
+
+
+#def main():
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
+    parser.add_argument(
+        "--config-file",
+        default=os.path.abspath(pathjoin(__file__, "../../configs/on_sb2.yaml",)),
+        metavar="FILE",
+        help="path to config file",
+        type=str,
+    )
+    parser.add_argument(
+        "--data_root",
+        default="",
+        metavar="FILE",
+        help="path to coco format",
+        type=str,
+    )
+    parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument(
+        "--skip-test",
+        dest="skip_test",
+        help="Do not test the final model",
+        action="store_true",
+    )
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+
+    args = parser.parse_args()
+    
+    cf.args = args
+    
+    num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
+    args.distributed = num_gpus > 1
+
+    if args.distributed:
+        torch.cuda.set_device(args.local_rank)
+        torch.distributed.init_process_group(
+            backend="nccl", init_method="env://"
+        )
+
+    cfg.merge_from_file(args.config_file)
+    cfg.merge_from_list(args.opts)
+    cfg.freeze()
+
+    output_dir = cfg.OUTPUT_DIR
+    if output_dir:
+        mkdir(output_dir)
+
+    logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
+    
+    import logging
+    logger.setLevel(logging.WARNING)
+    
+    logger.info("Using {} GPUs".format(num_gpus))
+    logger.info(args)
+
+    logger.info("Collecting env info (might take some time)")
+#    logger.info("\n" + collect_env_info())
+
+    logger.info("Loaded configuration file {}".format(args.config_file))
+    with open(args.config_file, "r") as cf:
+        config_str = "\n" + cf.read()
+        logger.info(config_str)
+#    logger.info("Running with config:\n{}".format(cfg))
+
+#    model = train(cfg, args.local_rank, args.distributed)
+    
+#    1/0
+    
+    cfg, local_rank, distributed = cfg, args.local_rank, args.distributed
+    
     model = build_detection_model(cfg)
     device = torch.device(cfg.MODEL.DEVICE)
     model.to(device)
@@ -61,7 +176,6 @@ def train(cfg, local_rank, distributed):
     )
 
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
-
     do_train(
         model,
         data_loader,
@@ -72,100 +186,11 @@ def train(cfg, local_rank, distributed):
         checkpoint_period,
         arguments,
     )
-
-    return model
-
-
-def test(cfg, model, distributed):
-    if distributed:
-        model = model.module
-    torch.cuda.empty_cache()  # TODO check if it helps
-    iou_types = ("bbox",)
-    if cfg.MODEL.MASK_ON:
-        iou_types = iou_types + ("segm",)
-    output_folders = [None] * len(cfg.DATASETS.TEST)
-    dataset_names = cfg.DATASETS.TEST
-    if cfg.OUTPUT_DIR:
-        for idx, dataset_name in enumerate(dataset_names):
-            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
-            mkdir(output_folder)
-            output_folders[idx] = output_folder
-    data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
-    for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
-        inference(
-            model,
-            data_loader_val,
-            dataset_name=dataset_name,
-            iou_types=iou_types,
-            box_only=cfg.MODEL.RPN_ONLY,
-            device=cfg.MODEL.DEVICE,
-            expected_results=cfg.TEST.EXPECTED_RESULTS,
-            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
-            output_folder=output_folder,
-        )
-        synchronize()
-
-
-def main():
-    parser = argparse.ArgumentParser(description="PyTorch Object Detection Training")
-    parser.add_argument(
-        "--config-file",
-        default="",
-        metavar="FILE",
-        help="path to config file",
-        type=str,
-    )
-    parser.add_argument("--local_rank", type=int, default=0)
-    parser.add_argument(
-        "--skip-test",
-        dest="skip_test",
-        help="Do not test the final model",
-        action="store_true",
-    )
-    parser.add_argument(
-        "opts",
-        help="Modify config options using the command-line",
-        default=None,
-        nargs=argparse.REMAINDER,
-    )
-
-    args = parser.parse_args()
-
-    num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
-    args.distributed = num_gpus > 1
-
-    if args.distributed:
-        torch.cuda.set_device(args.local_rank)
-        torch.distributed.init_process_group(
-            backend="nccl", init_method="env://"
-        )
-
-    cfg.merge_from_file(args.config_file)
-    cfg.merge_from_list(args.opts)
-    cfg.freeze()
-
-    output_dir = cfg.OUTPUT_DIR
-    if output_dir:
-        mkdir(output_dir)
-
-    logger = setup_logger("maskrcnn_benchmark", output_dir, get_rank())
-    logger.info("Using {} GPUs".format(num_gpus))
-    logger.info(args)
-
-    logger.info("Collecting env info (might take some time)")
-    logger.info("\n" + collect_env_info())
-
-    logger.info("Loaded configuration file {}".format(args.config_file))
-    with open(args.config_file, "r") as cf:
-        config_str = "\n" + cf.read()
-        logger.info(config_str)
-    logger.info("Running with config:\n{}".format(cfg))
-
-    model = train(cfg, args.local_rank, args.distributed)
-
-    if not args.skip_test:
+    
+    
+    
+    if not args.skip_test and 10:
         test(cfg, model, args.distributed)
 
 
-if __name__ == "__main__":
-    main()
+#    main()

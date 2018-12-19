@@ -6,7 +6,18 @@ import os
 
 class DatasetCatalog(object):
     DATA_DIR = "datasets"
+    from os import path
+    DATA_DIR = path.abspath(path.join(__file__, "../../../datasets"))
+    
     DATASETS = {
+        "coco_format_train": {
+            "img_dir": "coco/images/train2017",
+            "ann_file": "coco/annotations/instances_train2017.json"
+        },
+        "coco_format_val": {
+            "img_dir": "coco/images/val2017",
+            "ann_file": "coco/annotations/instances_val2017.json"
+        },
         "coco_2014_train": {
             "img_dir": "coco/train2014",
             "ann_file": "coco/annotations/instances_train2014.json"
@@ -91,6 +102,14 @@ class DatasetCatalog(object):
                 root=os.path.join(data_dir, attrs["img_dir"]),
                 ann_file=os.path.join(data_dir, attrs["ann_file"]),
             )
+            if "coco_format_" in name :
+                from boxx import cf
+                if cf.args.data_root:
+                    data_dir = cf.args.data_root
+                    args = dict(
+                        root=os.path.join(data_dir, attrs["img_dir"].replace('coco/','')),
+                        ann_file=os.path.join(data_dir, attrs["ann_file"].replace('coco/','')),
+                    )
             return dict(
                 factory="COCODataset",
                 args=args,

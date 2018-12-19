@@ -1,6 +1,9 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 # Set up custom environment before nearly anything else is imported
 # NOTE: this should be the first import (no not reorder)
+from boxx import *
+from boxx import addPathToSys, cf, pathjoin
+addPathToSys(__file__, '..')
 from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
 
 import argparse
@@ -22,9 +25,16 @@ def main():
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Inference")
     parser.add_argument(
         "--config-file",
-        default="/private/home/fmassa/github/detectron.pytorch_v2/configs/e2e_faster_rcnn_R_50_C4_1x_caffe2.yaml",
+        default=os.path.abspath(pathjoin(__file__, "../../configs/on_sb2.yaml",)),
         metavar="FILE",
         help="path to config file",
+    )
+    parser.add_argument(
+        "--data_root",
+        default="",
+        metavar="FILE",
+        help="path to coco format",
+        type=str,
     )
     parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument(
@@ -36,6 +46,8 @@ def main():
 
     args = parser.parse_args()
 
+    cf.args = args
+    
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     distributed = num_gpus > 1
 
