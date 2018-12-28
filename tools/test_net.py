@@ -37,6 +37,13 @@ def main():
         type=str,
     )
     parser.add_argument(
+        "--task",
+        default="rpc",
+        metavar="NAME",
+        help="NAME of task",
+        type=str,
+    )
+    parser.add_argument(
         "--load-pth",
         default="",
         metavar="FILE",

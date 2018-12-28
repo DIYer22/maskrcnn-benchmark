@@ -26,7 +26,7 @@ def build_transforms(cfg, is_train=True):
         ]
     )
     from boxx import cf
-    if cf.args.task == "rpc":
+    if is_train and cf.args.task == "rpc":
         transform = T.Compose(
             [
                 T.Resize(min_size, max_size),
