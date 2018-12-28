@@ -32,12 +32,13 @@ def visBboxList(rgb, bboxList, path='/tmp/visCanvas/tmp.pdf', classNames=None, b
     #cls_segms = None
     #cls_boxes = [np.zeros((0,5), np.float32) for _ in range(classn)]
     bboxnps = bboxList.bbox
-    extraFields = {k:v.cpu().numpy().squeeze() for k,v in bboxList.extra_fields.items()}
+    extraFields = {k:v.cpu().numpy() for k,v in bboxList.extra_fields.items()}
     if show_mask is None:
         if 'mask' in extraFields:
             show_mask = True
     
     for ind, bboxnp in enumerate(bboxnps):
+        g()
         other = dicto({k:v[ind] for k,v in extraFields.items()})
         if other.scores < thresh:
             continue
@@ -111,7 +112,10 @@ if __name__ == "__main__":
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.TEST.IMS_PER_BATCH = 1
-    cfg.MODEL.WEIGHT = os.path.abspath(pathjoin(__file__, "../../output/mix_11/model_final.pth"))
+    cfg.MODEL.WEIGHT = os.path.abspath(pathjoin(__file__, "../../output/mix_11/model_0002500.pth"))
+#    cfg.MODEL.WEIGHT = os.path.abspath(pathjoin(__file__, "../../output/mix_11/model_final.pth"))
+#    cfg.MODEL.WEIGHT = "/home/dl/junk/output/single/model_0052500.pth"
+#    cfg.MODEL.WEIGHT = "/home/dl/junk/output/single/model_final.pth"
 #    cfg.freeze()
     
     # prepare object that handles inference plus adds predictions on top of image
@@ -125,7 +129,7 @@ if __name__ == "__main__":
 
     imgps = sorted(glob(pathjoin(args.dir,"*.jpg")))
     loopLog = LogLoopTime(imgps)
-    for imgp in imgps[-8:]:
+    for imgp in imgps[:]:
         img = imread(imgp)
 #        composite = coco_demo.run_on_opencv_image(img[...,[2,1,0]])[...,[2,1,0]]
 #        show-composite
