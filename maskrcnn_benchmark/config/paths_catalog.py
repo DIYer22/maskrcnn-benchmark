@@ -94,7 +94,7 @@ class DatasetCatalog(object):
     }
 
     @staticmethod
-    def get(name):
+    def get(name, data_root=None):
         if "coco" in name:
             data_dir = DatasetCatalog.DATA_DIR
             attrs = DatasetCatalog.DATASETS[name]
@@ -102,14 +102,12 @@ class DatasetCatalog(object):
                 root=os.path.join(data_dir, attrs["img_dir"]),
                 ann_file=os.path.join(data_dir, attrs["ann_file"]),
             )
-            if "coco_format_" in name :
-                from boxx import cf
-                if cf.args.data_root:
-                    data_dir = cf.args.data_root
-                    args = dict(
-                        root=os.path.join(data_dir, attrs["img_dir"].replace('coco/','')),
-                        ann_file=os.path.join(data_dir, attrs["ann_file"].replace('coco/','')),
-                    )
+            if data_root:
+                data_dir = data_root
+                args = dict(
+                    root=os.path.join(data_dir, *attrs["img_dir"].split('/')[1:]),
+                    ann_file=os.path.join(data_dir, *attrs["ann_file"].split('/')[1:]),
+                )
             return dict(
                 factory="COCODataset",
                 args=args,
