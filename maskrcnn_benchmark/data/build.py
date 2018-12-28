@@ -14,7 +14,7 @@ from .collate_batch import BatchCollator
 from .transforms import build_transforms
 
 
-def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
+def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True, data_root=None):
     """
     Arguments:
         dataset_list (list[str]): Contains the names of the datasets, i.e.,
@@ -30,7 +30,9 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
         )
     datasets = []
     for dataset_name in dataset_list:
-        data = dataset_catalog.get(dataset_name)
+        data = dataset_catalog.get(dataset_name, data_root=data_root)
+
+
         factory = getattr(D, data["factory"])
         args = data["args"]
         # for COCODataset, we want to remove images without annotations
@@ -43,7 +45,6 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
         # make dataset from factory
         dataset = factory(**args)
         datasets.append(dataset)
-
     # for testing, return a list of datasets
     if not is_train:
         return datasets
@@ -52,7 +53,7 @@ def build_dataset(dataset_list, transforms, dataset_catalog, is_train=True):
     dataset = datasets[0]
     if len(datasets) > 1:
         dataset = D.ConcatDataset(datasets)
-
+    
     return [dataset]
 
 
@@ -151,8 +152,15 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
     dataset_list = cfg.DATASETS.TRAIN if is_train else cfg.DATASETS.TEST
 
     transforms = build_transforms(cfg, is_train)
-    datasets = build_dataset(dataset_list, transforms, DatasetCatalog, is_train)
-
+    
+    from boxx import cf
+    datasets = build_dataset(dataset_list, transforms, DatasetCatalog, is_train, cf.args.data_root)    
+    if is_train and cf.args.data_root2:
+        dataset2 = build_dataset(dataset_list, transforms, DatasetCatalog, is_train, cf.args.data_root2)[0]   
+        datasetDic = {datasets[0]:cf.args.__dict__.get("share1",1), dataset2:cf.args.share2}
+        print(datasetDic)
+        datasets = [D.coco.DatasetMerge(datasetDic)]
+#    import boxx.g
     data_loaders = []
     for dataset in datasets:
         sampler = make_data_sampler(dataset, shuffle, is_distributed)
@@ -168,6 +176,7 @@ def make_data_loader(cfg, is_train=True, is_distributed=False, start_iter=0):
             collate_fn=collator,
         )
         data_loaders.append(data_loader)
+
     if is_train:
         # during training, a single (possibly concatenated) data_loader is returned
         assert len(data_loaders) == 1

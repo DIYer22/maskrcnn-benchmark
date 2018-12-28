@@ -84,6 +84,27 @@ if __name__ == "__main__":
         help="path to coco format",
         type=str,
     )
+    parser.add_argument(
+        "--task",
+        default="rpc",
+        metavar="NAME",
+        help="NAME of task",
+        type=str,
+    )
+    parser.add_argument(
+        "--data_root2",
+        default="",
+        metavar="FILE",
+        help="path to coco format",
+        type=str,
+    )
+    parser.add_argument(
+        "--share2",
+        default=1,
+        metavar="NUM",
+        help="share of data_root2",
+        type=float,
+    )
     parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument(
         "--skip-test",
@@ -189,7 +210,7 @@ if __name__ == "__main__":
     
     
     
-    if not args.skip_test and 10:
+    if not args.skip_test and 0:
         test(cfg, model, args.distributed)
 
 

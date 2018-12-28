@@ -70,3 +70,38 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         img_id = self.id_to_img_map[index]
         img_data = self.coco.imgs[img_id]
         return img_data
+import random
+class DatasetMerge(torch.utils.data.dataset.Dataset):
+    def __init__(self, datasetDic):
+        self.datasetDic = datasetDic
+        self.datasets, self.shares = zip(*datasetDic.items())
+        summ = sum(self.shares)
+        self.accumulate = []
+        for share in self.shares:
+            self.accumulate.append(sum(self.accumulate)+share/summ)
+            
+    def sampleDataset(self, seed=None):
+        if seed is None:
+            seed = random.random()
+        for maxx, dataset in zip(self.accumulate, self.datasets):
+            if seed <= maxx:
+                return dataset
+        raise Exception( "seed is %s, "%seed, self.accumulate)
+        
+    
+    def __len__(self):
+        return sum([len(d) for d in self.datasets])
+    
+    def __getitem__(self, ind):
+        dataset = self.sampleDataset()
+        lenn = len(dataset)
+#        print(dataset)
+        return dataset[int(lenn*random.random())]
+    
+    def __repr__(self):
+        s = f'''DatasetMerge len is=%s
+        
+        {self.datasetDic}
+        '''%len(self)
+        return s
+    __str__ = __repr__
