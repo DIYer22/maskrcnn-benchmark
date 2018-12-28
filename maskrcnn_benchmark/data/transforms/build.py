@@ -25,4 +25,15 @@ def build_transforms(cfg, is_train=True):
             normalize_transform,
         ]
     )
+    from boxx import cf
+    if cf.args.task == "rpc":
+        transform = T.Compose(
+            [
+                T.Resize(min_size, max_size),
+                T.RandomHorizontalFlip(flip_prob),
+                T.RandomVerticalFlip(flip_prob),
+                T.ToTensor(),
+                normalize_transform,
+            ]
+        )
     return transform
