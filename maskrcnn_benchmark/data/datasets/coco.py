@@ -33,13 +33,22 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
     def __getitem__(self, idx):
         
-        img, anno = super(COCODataset, self).__getitem__(idx)
-        while 0:
+        for th in range(0):
             try:
                 img, anno = super(COCODataset, self).__getitem__(idx)
                 break
             except:
                 #idx += 1
+                from boxx import pred
+                pred-"\n\n%sth times to try `img, anno = super(COCODataset, self).__getitem__(idx)`, idx=%s\n\n"%(th, idx)
+                pass
+        tryTimes = 0
+        while 1:
+            try:
+                img, anno = super(COCODataset, self).__getitem__(idx + int(tryTimes//3))
+                break
+            except:
+                tryTimes += 1
                 pass
 
         # filter crowd annotations
