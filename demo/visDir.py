@@ -17,6 +17,8 @@ from predictor import COCODemo
 
 
 addPathToSys('/home/dl/research/auto_synthesis_data/a')
+if cloud:
+    addPathToSys('/unsullied/sharefs/yanglei/share/checkout-data/auto_synthesis/a')
 from visMask import vis_one_image, mask2rle
 
 def visBboxList(rgb, bboxList, path='/tmp/visCanvas/tmp.pdf', classNames=None, box_alpha=0.8, 
@@ -38,7 +40,7 @@ def visBboxList(rgb, bboxList, path='/tmp/visCanvas/tmp.pdf', classNames=None, b
             show_mask = True
     
     for ind, bboxnp in enumerate(bboxnps):
-        g()
+#        g()
         other = dicto({k:v[ind] for k,v in extraFields.items()})
         if other.scores < thresh:
             continue
@@ -96,8 +98,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--dir",
-        help="Modify model config options using the command-line",
+        help="which images dir",
         default="/home/dl/junk/mix_bad",
+    )
+    parser.add_argument(
+        "--pth",
+        help="pth file path",
+        default="",
     )
     parser.add_argument(
         "opts",
@@ -118,6 +125,9 @@ if __name__ == "__main__":
 #    cfg.MODEL.WEIGHT = "/home/dl/junk/output/single/model_final.pth"
 #    cfg.freeze()
     
+    if args.pth:
+        cfg.MODEL.WEIGHT = args.pth
+    
     # prepare object that handles inference plus adds predictions on top of image
     coco_demo = COCODemo(
         cfg,
@@ -134,6 +144,6 @@ if __name__ == "__main__":
 #        composite = coco_demo.run_on_opencv_image(img[...,[2,1,0]])[...,[2,1,0]]
 #        show-composite
         bboxList = coco_demo.getBboxList(img)
-        visBboxList(img, bboxList, imgp, pltshow=1 , thresh=args.confidence_threshold, classNames=classNames)
+        visBboxList(img, bboxList, imgp, pltshow=not cloud , thresh=args.confidence_threshold, classNames=classNames)
         execmd("google-chrome {}".format(imgp.replace('.jpg','.pdf')))
         loopLog(imgp)
