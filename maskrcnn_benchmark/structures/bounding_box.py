@@ -261,3 +261,9 @@ if __name__ == "__main__":
     t_bbox = bbox.transpose(0)
     print(t_bbox)
     print(t_bbox.bbox)
+    
+    import PIL
+    from PIL import Image
+    import skimage.data as sda
+    img=sda.coffee()
+    pil = Image.fromarray(img)
