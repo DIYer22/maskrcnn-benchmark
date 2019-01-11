@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
+import PIL
 
 # transpose
 FLIP_LEFT_RIGHT = 0
@@ -134,11 +135,12 @@ class BoxList(object):
           :py:attr:`PIL.Image.ROTATE_180`, :py:attr:`PIL.Image.ROTATE_270`,
           :py:attr:`PIL.Image.TRANSPOSE` or :py:attr:`PIL.Image.TRANSVERSE`.
         """
-        if method not in (FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM):
+        if method not in (FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270):
             raise NotImplementedError(
-                "Only FLIP_LEFT_RIGHT and FLIP_TOP_BOTTOM implemented"
+                "Only FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270 implemented"
             )
-
+        
+        transposed_size = self.size
         image_width, image_height = self.size
         xmin, ymin, xmax, ymax = self._split_into_xyxy()
         if method == FLIP_LEFT_RIGHT:
@@ -152,15 +154,36 @@ class BoxList(object):
             transposed_xmax = xmax
             transposed_ymin = image_height - ymax
             transposed_ymax = image_height - ymin
+        elif method == PIL.Image.ROTATE_90:
+            transposed_xmin = ymin
+            transposed_xmax = ymax
+            transposed_ymin = image_width - xmax
+            transposed_ymax = image_width - xmin
+            transposed_size = self.size[::-1]
+        elif method == PIL.Image.ROTATE_270:
+            transposed_xmin = image_height - ymax
+            transposed_xmax = image_height - ymin
+            transposed_ymin = xmin
+            transposed_ymax = xmax
+            transposed_size = self.size[::-1]
+        elif method == PIL.Image.ROTATE_180:
+            transposed_xmin = image_width - xmax
+            transposed_xmax = image_width - xmin
+            transposed_ymin = image_height - ymax
+            transposed_ymax = image_height - ymin
 
         transposed_boxes = torch.cat(
             (transposed_xmin, transposed_ymin, transposed_xmax, transposed_ymax), dim=-1
         )
-        bbox = BoxList(transposed_boxes, self.size, mode="xyxy")
+        bbox = BoxList(transposed_boxes, transposed_size, mode="xyxy")
+        
+        # TODO add extra_fields.transpose for PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270 
         # bbox._copy_extra_fields(self)
+        import boxx.g
         for k, v in self.extra_fields.items():
             if not isinstance(v, torch.Tensor):
-                v = v.transpose(method)
+                if method in [FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM]:
+                    v = v.transpose(method)
             bbox.add_field(k, v)
         return bbox.convert(self.mode)
 
@@ -232,7 +255,6 @@ class BoxList(object):
             area = box[:, 2] * box[:, 3]
         else:
             raise RuntimeError("Should not be here")
-            
         return area
 
     def copy_with_fields(self, fields):
@@ -254,11 +276,11 @@ class BoxList(object):
 
 if __name__ == "__main__":
     bbox = BoxList([[0, 0, 10, 10], [0, 0, 5, 5]], (10, 10))
-    s_bbox = bbox.resize((5, 5))
-    print(s_bbox)
-    print(s_bbox.bbox)
+#    s_bbox = bbox.resize((5, 5))
+#    print(s_bbox)
+#    print(s_bbox.bbox)
 
-    t_bbox = bbox.transpose(0)
+    t_bbox = bbox.transpose(PIL.Image.ROTATE_270)
     print(t_bbox)
     print(t_bbox.bbox)
     

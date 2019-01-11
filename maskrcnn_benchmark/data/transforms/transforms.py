@@ -3,6 +3,7 @@ import random
 
 import torch
 import torchvision
+import PIL
 from torchvision.transforms import functional as F
 
 
@@ -79,6 +80,20 @@ class RandomVerticalFlip(object):
             target = target.transpose(1)
         return image, target
 
+class RandomRotate(object):
+    def __init__(self, is_train):
+        self.is_train = is_train
+
+    def __call__(self, image, target):
+        if not self.is_train:
+            return image, target
+        method = random.choice([None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270])
+        if method is not None:
+            image = image.transpose(method)
+            target = target.transpose(method)
+            
+        return image, target
+    
 
 class ToTensor(object):
     def __call__(self, image, target):
