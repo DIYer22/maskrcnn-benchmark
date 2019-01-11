@@ -4,6 +4,8 @@
 @author: DIYer22@github.com
 @mail: ylxx@live.com
 Created on Mon Dec 17 23:10:54 2018
+
+rlaunch --gpu=1 --cpu=8 --memory=30000 -- python demo/visDir.py --config-file  configs/101_fpn_coco_format_1x.yaml  --dir /unsullied/sharefs/yanglei/share/checkout-data/check_image/analysis/allWrong --confidence-threshold 0.84 --pth output/testAsTrain/model_final.pth
 """
 from boxx import *
 import argparse
@@ -114,7 +116,7 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
+    
     # load config from file and command-line arguments
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
