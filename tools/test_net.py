@@ -2,7 +2,7 @@
 # Set up custom environment before nearly anything else is imported
 # NOTE: this should be the first import (no not reorder)
 from boxx import *
-from boxx import addPathToSys, cf, pathjoin
+from boxx import addPathToSys, cf, pathjoin, basename
 addPathToSys(__file__, '..')
 from maskrcnn_benchmark.utils.env import setup_environment  # noqa F401 isort:skip
 
@@ -21,7 +21,8 @@ from maskrcnn_benchmark.utils.logger import setup_logger
 from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
 
-def main():
+#def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="PyTorch Object Detection Inference")
     parser.add_argument(
         "--config-file",
@@ -118,7 +119,9 @@ def main():
             output_folder=output_folder,
         )
         synchronize()
-
-
-if __name__ == "__main__":
-    main()
+    
+    rejsp = pathjoin(cfg.OUTPUT_DIR, "inference/coco_format_val/bbox.json")
+    annjsp = pathjoin(args.data_root, "annotations/instances_val2017.json")
+    method = basename(cfg.OUTPUT_DIR)
+    
+    os.system(f"python -m rpctool {rejsp} {annjsp} --method {method} --levels averaged --mmap")
