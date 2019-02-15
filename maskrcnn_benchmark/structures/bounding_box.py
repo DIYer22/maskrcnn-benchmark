@@ -179,7 +179,6 @@ class BoxList(object):
         
         # TODO add extra_fields.transpose for PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270 
         # bbox._copy_extra_fields(self)
-        import boxx.g
         for k, v in self.extra_fields.items():
             if not isinstance(v, torch.Tensor):
                 if method in [FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM]:
