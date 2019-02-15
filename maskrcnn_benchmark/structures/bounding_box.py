@@ -280,7 +280,7 @@ if __name__ == "__main__":
 #    print(s_bbox)
 #    print(s_bbox.bbox)
 
-    t_bbox = bbox.transpose(PIL.Image.ROTATE_270)
+    t_bbox = bbox#.transpose(PIL.Image.ROTATE_270)
     print(t_bbox)
     print(t_bbox.bbox)
     
