@@ -62,7 +62,8 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         }
         self.id_to_img_map = {k: v for k, v in enumerate(self.ids)}
         self.transforms = transforms
-
+    
+    
     def __getitem__(self, idx):
         
         for th in range(0):
@@ -109,13 +110,28 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
-
+        
         return img, target, idx
-
+            
     def get_img_info(self, index):
         img_id = self.id_to_img_map[index]
         img_data = self.coco.imgs[img_id]
         return img_data
+    
+    getitem = __getitem__
+    def __getitem__(self, idx):
+        from boxx import cf
+        getitem = type(self).getitem
+        img, bboxs = getitem(self, idx)[:2]
+        if cf.get('is_train') and cf.args.__dict__.get('mixup'):
+            from .deteMixUp import deteMixUp2img
+            num = len(self)
+            ind2 = random.randint(0,num-1)
+            img2, bboxs2 = getitem(self, ind2)[:2]
+            img, bboxs = deteMixUp2img(img, bboxs, img2, bboxs2)
+#            print("\nMix Up on!\n")
+        return img, bboxs, idx
+    
 import random
 class DatasetMerge(torch.utils.data.dataset.Dataset):
     def __init__(self, datasetDic):

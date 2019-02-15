@@ -37,5 +37,6 @@ def build_transforms(cfg, is_train=True):
                 normalize_transform,
             ]
         )
-    import boxx.g
+    from boxx import cf
+    cf.is_train = is_train
     return transform

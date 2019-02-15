@@ -115,6 +115,11 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
+        "--mixup",
+        help="mix up in detection",
+        action="store_true",
+    )
+    parser.add_argument(
         "opts",
         help="Modify config options using the command-line",
         default=None,
