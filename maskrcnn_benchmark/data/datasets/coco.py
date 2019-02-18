@@ -120,10 +120,10 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
     
     getitem = __getitem__
     def __getitem__(self, idx):
-        from boxx import cf
+        from boxx import cf, randfloat
         getitem = type(self).getitem
         img, bboxs = getitem(self, idx)[:2]
-        if cf.get('is_train') and cf.args.__dict__.get('mixup'):
+        if cf.get('is_train') and cf.args.__dict__.get('mixup') and randfloat()>.5:
             from .deteMixUp import deteMixUp2img
             num = len(self)
             ind2 = random.randint(0,num-1)

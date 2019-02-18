@@ -29,10 +29,10 @@ def drawRectangleDataset(dataset):
     return drawRectangle(img2, bboxs2)
     
 
-def deteMixUp2img(img, bboxs, img2, bboxs2):
-    alpha = .5
-    alpha = distnorm(.5, maxbias=.1)
-    
+def deteMixUp2img(img, bboxs, img2, bboxs2, alpha=None):
+    if alpha is None:
+        alpha = distnorm(.5, maxbias=.165)
+        
     xy = Vector(img.shape[::-1][:2])
         
 #    drawRectangle(img2, bboxs2)
@@ -47,7 +47,7 @@ def deteMixUp2img(img, bboxs, img2, bboxs2):
 #    print(bias, size)
     assert all(xy>=size)
     
-    resized = torch.nn.functional.upsample(img2[None], size=tuple(size[::-1]), mode='bilinear')[0]
+    resized = torch.nn.functional.interpolate(img2[None], size=tuple(size[::-1]), mode='bilinear')[0]
 #    tree-[resized, img2]
     
     img[..., bias.y: bias.y+size.y, bias.x: bias.x+size.x] *= alpha
