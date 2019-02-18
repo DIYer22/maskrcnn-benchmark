@@ -10,6 +10,14 @@ class DatasetCatalog(object):
     DATA_DIR = path.abspath(path.join(__file__, "../../../datasets"))
     
     DATASETS = {
+        "coco_2019_train":{
+            "img_dir": "coco/train2019",
+            "ann_file": "coco/instances_train2019.json"
+        },
+        "coco_2019_val":{
+            "img_dir": "coco/val2019",
+            "ann_file": "coco/instances_val2019.json"
+        },
         "coco_format_train": {
             "img_dir": "coco/images/train2017",
             "ann_file": "coco/annotations/instances_train2017.json"
