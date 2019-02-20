@@ -115,7 +115,7 @@ if __name__ == "__main__":
             data_loader_val,
             dataset_name=dataset_name,
             iou_types=iou_types,
-            box_only=cfg.MODEL.RPN_ONLY,
+            box_only=False if cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
             device=cfg.MODEL.DEVICE,
             expected_results=cfg.TEST.EXPECTED_RESULTS,
             expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
