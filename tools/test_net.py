@@ -80,7 +80,7 @@ if __name__ == "__main__":
     save_dir = ""
     logger = setup_logger("maskrcnn_benchmark", save_dir, get_rank())
     logger.info("Using {} GPUs".format(num_gpus))
-    logger.info(cfg)
+#    logger.info(cfg)
 
     logger.info("Collecting env info (might take some time)")
     logger.info("\n" + collect_env_info())
