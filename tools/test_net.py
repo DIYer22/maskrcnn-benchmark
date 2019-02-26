@@ -123,8 +123,10 @@ if __name__ == "__main__":
         )
         synchronize()
     
-    rejsp = pathjoin(cfg.OUTPUT_DIR, "inference/coco_format_val/bbox.json")
-    annjsp = pathjoin(args.data_root, "annotations/instances_val2017.json")
+    rejsp = pathjoin(cfg.OUTPUT_DIR, "inference/%s/bbox.json"%cfg.DATASETS.TEST[0])
+    
+    from maskrcnn_benchmark.config.paths_catalog import DatasetCatalog
+    annjsp = pathjoin(args.data_root, *DatasetCatalog.DATASETS[cfg.DATASETS.TEST[0]]['ann_file'].split('/')[1:])
     method = basename(cfg.OUTPUT_DIR)
     
     os.system(f"python -m rpctool {rejsp} {annjsp} --method {method} --levels averaged --mmap")
