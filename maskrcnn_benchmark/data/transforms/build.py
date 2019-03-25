@@ -45,7 +45,27 @@ def build_transforms(cfg, is_train=True):
         transforms = transform.transforms
         transform = T.Compose(transforms[:-1] + [lambda img,t:(img*adjustBrightness, t)] + transforms[-1:])
         pred-"\n\nNotice: adjustBrightness is %s\n\n%s"%(adjustBrightness,transform)
+              
+#    adjustBrightness = 0.825
+#    adjustBrightness = 0.65
+    adjustBrightness = None
+    if adjustBrightness:
+        from boxx import np, uint8, pred
+        import skimage.color as col
+        from PIL import Image
+        def adjustBrightnessInHsv(img, vRate):
+            hsv = col.rgb2hsv(img)
+            hsv[...,2] *= vRate
+            newimg = col.hsv2rgb(hsv)
+            return uint8(newimg)
         
+        def adjustBrightnessPil(pil, target):
+            new = adjustBrightnessInHsv(np.array(pil), adjustBrightness)
+            newpil = Image.fromarray(new)
+            return newpil, target
+        pred-"\n\nNotice: adjustBrightness is %s\n\n%s"%(adjustBrightness,transform)
+        transforms = transform.transforms
+        transform = T.Compose(transforms[:1] + [adjustBrightnessPil] + transforms[1:])
     from boxx import cf
     cf.is_train = is_train
     return transform
